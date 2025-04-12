@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Time Left Calculator</title>
   <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -13,64 +14,126 @@
     }
   </script>
   <style>
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --primary: #1e88e5;
+      --text: #ffffff;
+      --accent: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      background-color: var(--card);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 400px;
       text-align: center;
+      animation: fadeIn 1s ease;
     }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    label {
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+
     input, button {
-      margin: 10px;
-      padding: 10px;
-      font-size: 16px;
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      width: 100%;
       border: none;
-      border-radius: 5px;
-      max-width: 90vw;
+      border-radius: 0.5rem;
+      transition: 0.2s ease;
     }
+
+    input {
+      background-color: #2c2c2c;
+      color: var(--text);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1976d2;
+      transform: scale(1.02);
+    }
+
     #countdown {
-      font-size: 24px;
-      margin-top: 20px;
+      margin-top: 1.5rem;
+      font-size: 1.5rem;
+      transition: opacity 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <h1>Time Left Calculator</h1>
-  <label for="datetime">Select Date and Time:</label>
-  <input type="datetime-local" id="datetime" />
-  <button onclick="calculateTimeLeft()">Calculate Time Left</button>
-
-  <div id="countdown"></div>
+  <div class="container">
+    <h1>Time Left</h1>
+    <label for="datetime">Select a future date & time:</label>
+    <input type="datetime-local" id="datetime" />
+    <button onclick="calculateTimeLeft()">Calculate</button>
+    <div id="countdown">⏳</div>
+  </div>
 
   <script>
     function calculateTimeLeft() {
-      const datetimeInput = document.getElementById("datetime").value;
-      if (!datetimeInput) return alert("Please select a date and time.");
+      const input = document.getElementById("datetime").value;
+      const output = document.getElementById("countdown");
 
-      const targetTime = new Date(datetimeInput).getTime();
+      if (!input) return alert("Please select a date and time.");
+
+      const target = new Date(input).getTime();
       const now = Date.now();
-      const diff = targetTime - now;
+      const diff = target - now;
 
       if (diff < 0) {
-        document.getElementById("countdown").innerText = "That time is already in the past.";
+        output.innerText = "⛔ Time already passed!";
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      const hours = Math.floor(diff / 3_600_000);
+      const minutes = Math.floor((diff % 3_600_000) / 60_000);
+      const seconds = Math.floor((diff % 60_000) / 1000);
 
-      document.getElementById("countdown").innerText =
-        "Time left: " +
-        String(hours).padStart(2, "0") + "h " +
-        String(minutes).padStart(2, "0") + "m " +
-        String(seconds).padStart(2, "0") + "s";
+      output.style.opacity = 0;
+      setTimeout(() => {
+        output.innerText = `⏰ ${hours}h ${minutes}m ${seconds}s left`;
+        output.style.opacity = 1;
+      }, 250);
     }
   </script>
 </body>
