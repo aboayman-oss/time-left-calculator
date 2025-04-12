@@ -6,13 +6,7 @@
   <title>Time Left Calculator</title>
   <link rel="manifest" href="manifest.json" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
-    }
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     :root {
       --bg: #121212;
@@ -20,6 +14,14 @@
       --primary: #1e88e5;
       --text: #ffffff;
       --accent: #90caf9;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: #222222;
+      --primary: #1976d2;
+      --accent: #1976d2;
     }
 
     * {
@@ -33,22 +35,22 @@
       margin: 0;
       padding: 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       flex-direction: column;
       height: 100vh;
-      overflow: hidden;
     }
 
     .container {
+      margin-top: 10vh;
+      margin-inline: auto;
       background-color: var(--card);
       padding: 2rem;
       border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       width: 90%;
       max-width: 400px;
       text-align: center;
-      animation: fadeIn 1s ease;
     }
 
     h1 {
@@ -77,6 +79,11 @@
       color: var(--text);
     }
 
+    [data-theme="light"] input {
+      background-color: #eee;
+      color: #000;
+    }
+
     button {
       background-color: var(--primary);
       color: #fff;
@@ -84,19 +91,32 @@
     }
 
     button:hover {
-      background-color: #1976d2;
+      background-color: #1565c0;
       transform: scale(1.02);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 1rem;
     }
 
     #countdown {
       margin-top: 1.5rem;
       font-size: 1.5rem;
-      transition: opacity 0.4s ease;
+      min-height: 2.5rem;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .toggle {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .toggle button {
+      flex: 1;
     }
   </style>
 </head>
@@ -105,35 +125,78 @@
     <h1>Time Left</h1>
     <label for="datetime">Select a future date & time:</label>
     <input type="datetime-local" id="datetime" />
-    <button onclick="calculateTimeLeft()">Calculate</button>
+    <div class="actions">
+      <button onclick="calculateTimeLeft()">Calculate</button>
+      <button onclick="toggleLive()">🔄 Live</button>
+    </div>
     <div id="countdown">⏳</div>
+    <div class="toggle">
+      <button onclick="toggleTheme()">🌗 Theme</button>
+    </div>
   </div>
 
   <script>
-    function calculateTimeLeft() {
-      const input = document.getElementById("datetime").value;
-      const output = document.getElementById("countdown");
+    const countdownEl = document.getElementById("countdown");
+    const inputEl = document.getElementById("datetime");
+    let liveInterval = null;
 
+    // Restore saved date and theme
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedDate = localStorage.getItem("savedDate");
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedDate) inputEl.value = savedDate;
+      if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+    });
+
+    function calculateTimeLeft() {
+      const input = inputEl.value;
       if (!input) return alert("Please select a date and time.");
 
+      localStorage.setItem("savedDate", input);
       const target = new Date(input).getTime();
       const now = Date.now();
       const diff = target - now;
 
       if (diff < 0) {
-        output.innerText = "⛔ Time already passed!";
+        animateText("⛔ Time already passed!");
         return;
       }
 
       const hours = Math.floor(diff / 3_600_000);
       const minutes = Math.floor((diff % 3_600_000) / 60_000);
       const seconds = Math.floor((diff % 60_000) / 1000);
+      animateText(`⏰ ${hours}h ${minutes}m ${seconds}s left`);
+    }
 
-      output.style.opacity = 0;
-      setTimeout(() => {
-        output.innerText = `⏰ ${hours}h ${minutes}m ${seconds}s left`;
-        output.style.opacity = 1;
-      }, 250);
+    function toggleLive() {
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        liveInterval = null;
+        animateText("⏳ Live stopped.");
+      } else {
+        calculateTimeLeft();
+        liveInterval = setInterval(calculateTimeLeft, 1000);
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      const newTheme = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+    }
+
+    function animateText(text) {
+      gsap.to(countdownEl, { opacity: 0, duration: 0.3, onComplete: () => {
+        countdownEl.innerText = text;
+        gsap.to(countdownEl, { opacity: 1, duration: 0.3 });
+      }});
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
     }
   </script>
 </body>
