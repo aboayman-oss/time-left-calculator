@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Left Calculator</title>
+  <link rel="manifest" href="manifest.json" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      max-width: 90vw;
+    }
+    #countdown {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Time Left Calculator</h1>
+  <label for="datetime">Select Date and Time:</label>
+  <input type="datetime-local" id="datetime" />
+  <button onclick="calculateTimeLeft()">Calculate Time Left</button>
+
+  <div id="countdown"></div>
+
+  <script>
+    function calculateTimeLeft() {
+      const datetimeInput = document.getElementById("datetime").value;
+      if (!datetimeInput) return alert("Please select a date and time.");
+
+      const targetTime = new Date(datetimeInput).getTime();
+      const now = Date.now();
+      const diff = targetTime - now;
+
+      if (diff < 0) {
+        document.getElementById("countdown").innerText = "That time is already in the past.";
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById("countdown").innerText =
+        "Time left: " +
+        String(hours).padStart(2, "0") + "h " +
+        String(minutes).padStart(2, "0") + "m " +
+        String(seconds).padStart(2, "0") + "s";
+    }
+  </script>
+</body>
+</html>
